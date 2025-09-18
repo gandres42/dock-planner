@@ -14,12 +14,6 @@ VOXEL_RESOLUTION = 0.01 # 1cm voxels
 class Planner:
     def __init__(self):
         self.dock_voxel_grid = o3d.io.read_voxel_grid("dock_voxel.ply")
-        # mesh = o3d.io.read_triangle_mesh("dock.stl")
-        # mesh.translate([431.8, 0, 0])
-        # mesh.scale(0.001, center=[0, 0, 0])  # Convert mm to meters
-        # self.dock_voxel_grid = o3d.geometry.VoxelGrid.create_from_triangle_mesh(mesh, voxel_size=VOXEL_RESOLUTION)
-        # self.grid = np.zeros((100, 100, 100), dtype=int)
-        # self.grid[8:12, 8:12, 8:12] = 1  # Add a cubic obstacle
 
     def is_state_valid(self, state):
         x, y, z = int(state[0]), int(state[1]), int(state[2])
