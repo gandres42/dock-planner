@@ -1,7 +1,5 @@
 import open3d as o3d
 import numpy as np
-from ompl import base as ob
-from ompl import geometric as og
 
 VOXEL_SIZE = .01
 
