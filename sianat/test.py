@@ -23,7 +23,7 @@ for voxel in dock_voxel_grid.get_voxels():
     voxel_indeces[tuple(voxel.grid_index)] = None
 
 start_position = tuple(dock_voxel_grid.get_voxel([0, 0, 0]))
-goal_position = tuple(dock_voxel_grid.get_voxel([4, 3, 3]))
+goal_position = tuple(dock_voxel_grid.get_voxel([10, 3, 3]))
 
 print('hashed!')
 
@@ -83,13 +83,13 @@ def theta_star(start, goal):
                 if neighbor not in g_score or tentative_g < g_score[neighbor]:
                     g_score[neighbor] = tentative_g # type: ignore
                     parent[neighbor] = parent[current]
-                    heapq.heappush(open_set, (tentative_g + (euclidean(neighbor, goal) * 1.1), neighbor))
+                    heapq.heappush(open_set, (tentative_g + (euclidean(neighbor, goal) * 2), neighbor))
             else:
                 tentative_g = g_score[current] + euclidean(current, neighbor)
                 if neighbor not in g_score or tentative_g < g_score[neighbor]:
                     g_score[neighbor] = tentative_g # type: ignore
                     parent[neighbor] = current
-                    heapq.heappush(open_set, (tentative_g + (euclidean(neighbor, goal) * 1.1), neighbor))
+                    heapq.heappush(open_set, (tentative_g + (euclidean(neighbor, goal) * 2), neighbor))
     return None
 
 def astar(start, goal):
@@ -137,7 +137,7 @@ if len(path_points) > 1:
     line_set.points = o3d.utility.Vector3dVector(path_points)
     line_set.lines = o3d.utility.Vector2iVector(lines)
     line_set.colors = o3d.utility.Vector3dVector(colors)
-    o3d.visualization.draw_geometries([mesh, line_set]) # type: ignore
+    o3d.visualization.draw_geometries([dock, line_set]) # type: ignore
 else:
     # o3d.visualization.draw_geometries([mesh])
     pass
