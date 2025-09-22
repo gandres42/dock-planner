@@ -19,7 +19,6 @@ class Planner:
         self.voxel_indices = {}
         for voxel in self.dock_voxel_grid.get_voxels():
             self.voxel_indices[tuple(voxel.grid_index)] = None
-        
         print('hashing complete')
 
     def nearest_distance_compute(self, pt):
@@ -38,6 +37,7 @@ class Planner:
 
     def plan(self, start_position, max_time=1.0):
         # define the state .setspace
+        
         space = ob.RealVectorStateSpace(3)
         bounds = ob.RealVectorBounds(3)
         bounds.setLow(-5)
