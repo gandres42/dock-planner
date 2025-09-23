@@ -10,11 +10,13 @@ from nav_msgs.msg import Path
 from geometry_msgs.msg import PoseStamped
 import time
 from scipy.spatial.transform import Rotation as R
+from visualization_msgs.msg import Marker
 import ompl.util as ou
 ou.setLogLevel(ou.LogLevel.LOG_NONE)
 
 VOXEL_RESOLUTION = 0.01 # 1cm voxels
 REPLAN_TIME = 0.5
+HORIZON_LENGTH = 0.25
 
 class Planner(Node):
     def __init__(self):
@@ -23,11 +25,11 @@ class Planner(Node):
 
         # read dock mesh
         self.dock_mesh: o3d.geometry.TriangleMesh = o3d.io.read_triangle_mesh("simple_dock.stl") # type: ignore
-
+        
         # create hash table with occupied voxel grid locations
         self.dock_voxel_grid = o3d.io.read_voxel_grid('dock_voxel_gapped.ply') # type: ignore
-        # self.dock_voxel_grid.rotate(R.from_euler('xyz', (0, 0, 180), degrees=True).as_matrix(), center=[0, 0, 0])
         self.voxel_indices = {}
+        self.get_logger().info(f"hashing voxel grid...")
         for voxel in self.dock_voxel_grid.get_voxels():
             self.voxel_indices[tuple(voxel.grid_index)] = None
 
@@ -37,37 +39,36 @@ class Planner(Node):
         bounds.setLow(-5) # type: ignore
         bounds.setHigh(5) # type: ignore
         space.setBounds(bounds)
-
         self.si = ob.SpaceInformation(space)
         self.si.setStateValidityChecker(ob.StateValidityCheckerFn(self.is_state_valid)) # type: ignore
         self.si.setup() # type: ignore
-
         self.start = self.si.allocState() # type: ignore
         self.goal = self.si.allocState() # type: ignore
-
         self.problem_planner = og.RRT(self.si)
         self.problem_planner.setRange(0.01) # type: ignore
         self.problem_planner.setup() # type: ignore
 
+        # save path
+        self.path = np.array([])
+
         # path publisher and pose subscriber
-        self.path_pub = self.create_publisher(Path, '/sianat/raw_path', 1)
+        self.path_pub = self.create_publisher(Path, '/sianat/path', 1)
+        self.waypoint_pub = self.create_publisher(PoseStamped, '/sianat/waypoint', 1)
         self.pose_sub = self.create_subscription(PoseStamped, '/aruco/pose', self.pose_update, 1)
-        self.plan_timer = self.create_timer(REPLAN_TIME, self.plan_cb)
-        self.position = (None, None, None)
         self.get_logger().info(f"setup complete in {time.monotonic() - start_time}")
 
     def pose_update(self, msg: PoseStamped):
-        self.position = (msg.pose.position.x, msg.pose.position.y, msg.pose.position.z)
-
-    def plan_cb(self):
-        if None in self.position:
-            return
-        path = self.plan(self.position, max_time=REPLAN_TIME / 2)
-        if path.size > 0:
+        # get positiona and distances to all points in current path
+        position = np.array([msg.pose.position.x, msg.pose.position.y, msg.pose.position.z])
+        dists = [np.linalg.norm(position - path_point) for path_point in self.path]
+        
+        # replan if needed or first time
+        if len(self.path) == 0 or np.min(dists) > HORIZON_LENGTH:
+            self.path = self.plan(position, max_time=REPLAN_TIME)
             path_msg: Path = Path()
             path_msg.header.stamp = self.get_clock().now().to_msg()
             path_msg.header.frame_id = "base_link"
-            for pt in path:
+            for pt in self.path:
                 pose = PoseStamped()
                 pose.header = path_msg.header
                 pose.pose.position.x = float(pt[0])
@@ -76,6 +77,20 @@ class Planner(Node):
                 pose.pose.orientation.w = 1.0
                 path_msg.poses.append(pose) # type: ignore
             self.path_pub.publish(path_msg)
+
+        # recalculate path distances
+        for point in self.path:
+            dist = np.linalg.norm(point - position)
+            if dist < HORIZON_LENGTH:
+                waypoint = PoseStamped()
+                waypoint.header = msg.header
+                waypoint.pose.position.x = point[0]
+                waypoint.pose.position.y = point[1]
+                waypoint.pose.position.z = point[2]
+                self.waypoint_pub.publish(waypoint)
+                break
+
+
 
     def is_state_valid(self, state: ompl.base.RealVectorState):
         voxel_coord = tuple(self.dock_voxel_grid.get_voxel((state[0], state[1], state[2]))) # type: ignore
@@ -106,7 +121,5 @@ if __name__ == "__main__":
     rclpy.init()
     planner = Planner()
     rclpy.spin(planner)
-    # planner.plan([4, 2, 0], max_time=2)
-    # planner.plan([3, 0, 0], max_time=.5)
     rclpy.shutdown()
     os._exit(0)
