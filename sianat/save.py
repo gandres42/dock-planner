@@ -1,5 +1,6 @@
 import open3d as o3d
 import numpy as np
+from scipy.spatial.transform import Rotation as R
 
 VOXEL_SIZE = .01
 ROBOT_DIMENSIONS = [.4, .55, .4]
@@ -33,7 +34,9 @@ def main():
     merged_cloud = clouds[0]
     for cloud in clouds[1:]:
         merged_cloud += cloud
+    merged_cloud.rotate(R.from_euler('xyz', (0, 0, 180), degrees=True).as_matrix(), center=[0, 0, 0])
     clouds = [merged_cloud, o3d.geometry.TriangleMesh.create_coordinate_frame(size=0.25, origin=[0, 0, 0])]
+    
     o3d.visualization.draw_geometries(clouds) # type: ignore
 
 
