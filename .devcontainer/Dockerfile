@@ -18,16 +18,21 @@ RUN groupadd --gid $USER_GID $USERNAME \
 RUN apt-get update && apt-get upgrade -y
 RUN sudo apt install -y git nano python-is-python3 wget curl
 
-# install pixi and uv
-USER $USERNAME
-WORKDIR /home/$USERNAME
-RUN sudo apt install -y curl
-RUN curl -fsSL https://pixi.sh/install.sh | sh
-RUN curl -LsSf https://astral.sh/uv/install.sh | sh
+# install miniconda
+RUN wget --quiet https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh -O /tmp/miniconda.sh \
+    && bash /tmp/miniconda.sh -b -p /opt/miniconda \
+    && rm /tmp/miniconda.sh \
+    && /opt/miniconda/bin/conda clean -afy
+ENV PATH="/opt/miniconda/bin:$PATH"
 
-# add dotfiles to force pixi shell activation
-RUN git clone https://github.com/gandres42/dotfiles.git && mv dotfiles .dotfiles
-RUN echo 'source ~/.dotfiles/setup.bash' >> ~/.bashrc
+# create conda environment with robostack-jazzy channel and install ROS noetic
+WORKDIR /home/$USERNAME
+USER $USERNAME
+RUN conda tos accept
+RUN conda config --add channels conda-forge \
+    && conda config --add channels robostack-noetic \
+    && conda create -n noetic ros-noetic-desktop pip -y \
+    && conda clean -afy
+RUN conda init
+RUN echo "conda activate noetic" >> /home/$USERNAME/.bashrc
 ENV SHELL /bin/bash
-ENV PIXI_ACTIVATE true
-CMD ["/bin/bash"]
