@@ -15,11 +15,13 @@
         "--net=host",
         "--pid=host",
         "--ipc=host",
+        "--gpus=all",
         "-e", "DISPLAY=${env:DISPLAY}"
     ],
     "mounts": [
        "source=/tmp/.X11-unix,target=/tmp/.X11-unix,type=bind,consistency=cached",
        "source=/dev/dri,target=/dev/dri,type=bind,consistency=cached",
-       "type=bind,source=/home/${localEnv:USER}/.ssh,target=/home/${env:USER}/.ssh,readonly"
+       "type=bind,source=/home/${localEnv:USER}/.ssh,target=/home/${env:USER}/.ssh,readonly",
+       "type=bind,source=/home/gavin/Datasets,target=/home/${env:USER}/ws/datasets,readonly"
     ]
 }

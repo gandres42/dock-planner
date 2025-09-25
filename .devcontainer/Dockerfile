@@ -3,6 +3,7 @@ ARG USERNAME=USERNAME
 ARG CONTAINER_ID=CONTAINER_ID
 ARG USER_UID=1000
 ARG USER_GID=$USER_UID
+ENV DEBIAN_FRONTEND noninteractive
 
 # create non-root user and add to sudo
 RUN if id -u $USER_UID ; then userdel `id -un $USER_UID` ; fi
@@ -20,7 +21,7 @@ RUN add-apt-repository ppa:ros-for-jammy/noetic
 RUN apt-get install -y python3-pip ros-noetic-desktop -y
 
 # install python packages
-RUN pip install open3d ompl catkin-tools
+RUN pip install open3d ompl catkin_tools
 
 # dev environment setup
 USER $USERNAME
