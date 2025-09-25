@@ -5,7 +5,7 @@ import numpy as np
 import os
 import open3d as o3d
 import rospy
-from nav_msgs.msg import Path
+from nav_msgs.msg import Path, Odometry
 from geometry_msgs.msg import PoseStamped
 import time
 from scipy.spatial.transform import Rotation as R
@@ -15,7 +15,7 @@ ou.setLogLevel(ou.LogLevel.LOG_NONE)
 
 VOXEL_RESOLUTION = 0.01 # 1cm voxels
 REPLAN_TIME = 0.5
-HORIZON_LENGTH = 0.25
+HORIZON_LENGTH = 0.5
 
 class Planner:
     def __init__(self):
@@ -53,12 +53,13 @@ class Planner:
         # path publisher and pose subscriber
         self.path_pub = rospy.Publisher('/sianat/path', Path, queue_size=1)
         self.waypoint_pub = rospy.Publisher('/sianat/waypoint', PoseStamped, queue_size=1)
-        self.pose_sub = rospy.Subscriber('/aruco/pose', PoseStamped, self.pose_update, queue_size=1)
+        self.pose_sub = rospy.Subscriber('/docking_control/rov_odom', Odometry, self.pose_update, queue_size=1)
         rospy.loginfo(f"setup complete in {time.monotonic() - start_time}")
 
-    def pose_update(self, msg: PoseStamped):
+    def pose_update(self, msg):
+        # print(msg)
         # get positiona and distances to all points in current path
-        position = np.array([msg.pose.position.x, msg.pose.position.y, msg.pose.position.z])
+        position = np.array([msg.pose.pose.position.x, msg.pose.pose.position.y, msg.pose.pose.position.z])
         dists = [np.linalg.norm(position - path_point) for path_point in self.path]
         
         # replan if needed or first time
@@ -66,7 +67,7 @@ class Planner:
             self.path = self.plan(position, max_time=REPLAN_TIME)
             path_msg = Path()
             path_msg.header.stamp = rospy.Time.now()
-            path_msg.header.frame_id = "base_link"
+            path_msg.header.frame_id = "map_ned"
             for pt in self.path:
                 pose = PoseStamped()
                 pose.header = path_msg.header
@@ -83,6 +84,7 @@ class Planner:
             if dist < HORIZON_LENGTH:
                 waypoint = PoseStamped()
                 waypoint.header = msg.header
+                waypoint.header.frame_id = "map_ned"
                 waypoint.pose.position.x = point[0]
                 waypoint.pose.position.y = point[1]
                 waypoint.pose.position.z = point[2]
