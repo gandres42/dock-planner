@@ -1,4 +1,4 @@
-FROM ubuntu:22.04
+FROM ubuntu:24.04
 ARG USERNAME=USERNAME
 ARG CONTAINER_ID=CONTAINER_ID
 ARG USER_UID=1000
@@ -16,21 +16,18 @@ RUN groupadd --gid $USER_GID $USERNAME \
 
 # update and install packages
 RUN apt-get update && apt-get upgrade -y
-RUN apt-get install software-properties-common -y
-RUN add-apt-repository ppa:ros-for-jammy/noetic
-RUN apt-get install -y python3-pip ros-noetic-desktop -y
+RUN sudo apt install -y git nano python-is-python3 wget curl
 
-# install python packages
-RUN pip install open3d ompl catkin_tools
-
-# dev environment setup
+# install pixi and uv
 USER $USERNAME
 WORKDIR /home/$USERNAME
-RUN sudo apt install -y git nano python-is-python3 wget curl
-RUN echo '[pip]\nprefix = ".local"' > uv.toml
+RUN sudo apt install -y curl
+RUN curl -fsSL https://pixi.sh/install.sh | sh
 RUN curl -LsSf https://astral.sh/uv/install.sh | sh
+
+# add dotfiles to force pixi shell activation
 RUN git clone https://github.com/gandres42/dotfiles.git && mv dotfiles .dotfiles
 RUN echo 'source ~/.dotfiles/setup.bash' >> ~/.bashrc
 ENV SHELL /bin/bash
-ENV CONTAINER_ID $CONTAINER_ID
+ENV PIXI_ACTIVATE true
 CMD ["/bin/bash"]
