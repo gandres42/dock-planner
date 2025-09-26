@@ -34,5 +34,7 @@ RUN conda config --add channels conda-forge \
     && conda create -n noetic ros-noetic-desktop pip -y \
     && conda clean -afy
 RUN conda init
+SHELL ["conda", "run", "-n", "noetic", "/bin/bash", "-c"]
+RUN pip install ompl open3d scipy
 RUN echo "conda activate noetic" >> /home/$USERNAME/.bashrc
 ENV SHELL /bin/bash
