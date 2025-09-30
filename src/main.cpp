@@ -202,9 +202,6 @@ private:
         nearest_pose_msg.pose.orientation.y = 0.0;
         nearest_pose_msg.pose.orientation.z = 0.0;
         this->pose_pub.publish(nearest_pose_msg);
-
-        std::cout << msg->pose.position.x << ", " << msg->pose.position.y <<  ", " << msg->pose.position.z << std::endl;
-
     }
 public:
     Docking() {
