@@ -12,25 +12,15 @@
     "workspaceFolder": "/home/${env:USER}/ws",
     "workspaceMount": "source=${localWorkspaceFolder},target=/home/${env:USER}/ws,type=bind",
     "runArgs": [
-        "--network=host",
-        "--ulimit",
-        "nofile=524288:524288",
-        "--gpus=all",
-        "--cap-add=SYS_PTRACE",
-        "--security-opt=seccomp:unconfined",
-        "--security-opt=apparmor:unconfined",
-        "--volume=/run/user/1000:/run/user/1000"
+        "--net=host",
+        "--pid=host",
+        "--ipc=host",
+        "-e", "DISPLAY=${env:DISPLAY}"
     ],
-    "containerEnv": {
-        "DISPLAY": "${localEnv:DISPLAY}",
-        "WAYLAND_DISPLAY": "${localEnv:WAYLAND_DISPLAY}",
-        "XDG_RUNTIME_DIR": "${localEnv:XDG_RUNTIME_DIR}",
-        "PULSE_SERVER": "${localEnv:PULSE_SERVER}"
-    },
     "mounts": [
        "source=/tmp/.X11-unix,target=/tmp/.X11-unix,type=bind,consistency=cached",
        "source=/dev/dri,target=/dev/dri,type=bind,consistency=cached",
        "type=bind,source=/home/${localEnv:USER}/.ssh,target=/home/${env:USER}/.ssh,readonly",
-       "type=bind,source=/home/gavin/Datasets,target=/home/${env:USER}/ws/datasets,readonly"
+       "type=bind,source=/home/${localEnv:USER}/Datasets,target=/home/${env:USER}/Datasets"
     ]
 }
