@@ -4,6 +4,7 @@ project(planner)
 find_package(catkin REQUIRED COMPONENTS
   roscpp
   sensor_msgs
+  roslib
 )
 
 find_package(Open3D REQUIRED)

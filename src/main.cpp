@@ -3,6 +3,7 @@
 #include <tuple>
 #include <unordered_map>
 #include <ros/ros.h>
+#include <ros/package.h>
 #include <nav_msgs/Path.h>
 #include <geometry_msgs/PoseStamped.h>
 #include <open3d/Open3D.h>
@@ -20,6 +21,7 @@
 #include <ompl/config.h>
 #include <iostream>
 #include <Eigen/Dense>
+#include <string>
 
 namespace ob = ompl::base;
 namespace og = ompl::geometric;
@@ -53,8 +55,9 @@ public:
                 si(nullptr),
                 planner(nullptr)
     {
-        open3d::io::ReadTriangleMesh("/home/gavin/ws/src/dock-planner/src/dock.stl", *dock_stl);
-        open3d::io::ReadTriangleMesh("/home/gavin/ws/src/dock-planner/src/dock_nono_square.stl", *dock_nono_square_stl);
+        std::string pkg_path = ros::package::getPath("planner");
+        open3d::io::ReadTriangleMesh(pkg_path + "/src/dock.stl", *dock_stl);
+        open3d::io::ReadTriangleMesh(pkg_path + "/src/dock_nono_square.stl", *dock_nono_square_stl);
 
         // Rotate both meshes by 180 degrees around Z axis
         Eigen::AngleAxisd rot_z(M_PI, Eigen::Vector3d::UnitZ());
