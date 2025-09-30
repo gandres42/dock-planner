@@ -166,6 +166,7 @@ private:
         double py = msg->pose.position.y;
         double pz = msg->pose.position.z;
         if (this->pointDistance(this->prev_plan_pose, std::make_tuple(px, py, pz)) > HORIZON_DISTANCE) {
+            ROS_INFO("Path replan triggered");
             this->path = this->p.planPath(px, py, pz);
             this->prev_plan_pose = std::make_tuple(px, py, pz);
 
